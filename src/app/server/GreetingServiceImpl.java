@@ -22,7 +22,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		System.out.println(("start.."));
 		String session="";
 		try{
-		session = tempServlet.login(id, pwd);//JSESSIONID리턴
+		session = login(id, pwd);//JSESSIONID리턴
 		System.out.println(session);
 		if(session != null && session.trim().length() != 0){
 			System.out.println("LOGIN OK!!");
@@ -142,7 +142,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		String result = "";
 		
 		while ((line = in.readLine()) != null) {
-			System.out.println(line);
+			//System.out.println(line);
 			result +=line;
 		}
 		String json = result;

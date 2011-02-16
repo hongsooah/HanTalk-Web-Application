@@ -6,6 +6,7 @@ public class Time extends JavaScriptObject {
 		
 	protected Time(){}
 	
+	//public final native String getResult(int i ) /*-{ return this.result[i] == null ? "null" : "not null" }-*/;
 	public final native String getDeptName(int i)/*-{return this.result[i].account.deptName}-*/;
 	public final native String getEmail(int i)/*-{return this.result[i].account.email}-*/;
 	public final native String getProfileVoList_imgPath(int i)/*-{
