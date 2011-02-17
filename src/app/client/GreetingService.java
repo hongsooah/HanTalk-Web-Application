@@ -1,8 +1,5 @@
 package app.client;
 
-import java.util.Properties;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
@@ -11,8 +8,13 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("greet")
 public interface GreetingService extends RemoteService {
-	String getJson(String id, String pwd) throws IllegalArgumentException, Exception;
+	
+	String login(String id, String pwd) throws Exception;
 	String getAccountInfo(String session, String id)  throws Exception;
 	String getTimeline(String session, String offset, String length) throws Exception;
+	String getTimeline(String session, String offset, String length, String group) throws Exception;
 	String getExtend(String session, String offset) throws Exception;
+	String getSession(String id, String pwd) throws Exception;
+	String getReplyAll(String session, String postId) throws Exception;
+	String post(String session, String group, String text, String parent, String via ,boolean reply) throws Exception;
 }

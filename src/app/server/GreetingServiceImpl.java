@@ -3,6 +3,9 @@ package app.server;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -18,27 +21,22 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @SuppressWarnings("serial")
 public class GreetingServiceImpl extends RemoteServiceServlet implements GreetingService {
 
-	public String getJson(String id, String pwd) throws Exception{
-		System.out.println(("start.."));
+	public String login(String id, String pwd) throws Exception{
+		System.out.println(("Start.."));
 		String session="";
 		try{
-		session = tempServlet.login(id, pwd);//JSESSIONID리턴
-		System.out.println(session);
-		if(session != null && session.trim().length() != 0){
-			System.out.println("LOGIN OK!!");
-			//String json = tempServlet.getAccountInfo(session, id);
-//			String json = tempServlet.getTimeline(session, "0");
-//			test.getTimeline();
-//			test.post("�꾨Т��Xwing 踰좏� 諛쒗몴�뚯뿉��xwing�쇰줈 �쒗넚��援ы쁽��紐⑥뒿��蹂댁뿬 �쒕┫ �щ쭩��蹂댁엯�덈떎.", "9934");
-//			HantalkAgent.post(session, "�쒕뵒���쒗넚���レ뿀�듬땲��. Xwing beta 諛쒗몴�뚯뿉��Xwing�쇰줈 �쒗넚���쇰� 援ы쁽��紐⑥뒿��蹂댁뿬 �쒕┫ ���덉쓣 �щ쭩���뺤씤���쒓컙��湲곕줉�⑸땲�� ", "-1", "湲덉슂�����諛� 二쇰쭚�먮룄 異쒓렐���뚯궗");
-			//System.out.println(json);
+			session = getSession(id, pwd);//JSESSIONID리턴
+			System.out.println(session);
+			if(session != null && session.trim().length() != 0){
+				System.out.println("LOGIN OK!!");
 			}
 		}catch(Exception e){
-			System.out.println("failed...");
+			System.out.println("Failed...");
 		}
 		return session;
 	}
-	public String login(String id, String pwd) throws Exception{
+	
+	public String getSession(String id, String pwd) throws Exception{
 		String jsessionId = "";
 		String urlstr = "http://hantalk.hansol.net/j_spring_security_check";
 		URL url = new URL(urlstr);
@@ -68,46 +66,56 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		System.out.println(http.getHeaderFields());
 
 		String location = http.getHeaderField("Location");
-		if(location != null){
+		if(location.length() > 70){
 			int idx1 = location.indexOf("=")+1;
 			int idx2 = location.indexOf('?');
 			if(idx1 != -1 && idx2 != -1){
 				jsessionId = "JSESSIONID="+location.substring(idx1,idx2 ) + ";";
 				System.out.println(jsessionId);
 			}
+		} else {
+			jsessionId = http.getHeaderField("set-cookie");
+			jsessionId = jsessionId.substring(0, 42);
+			System.out.println(jsessionId);
 		}
-
+		
 		return jsessionId;
 	}
+	
 	public String getAccountInfo(String session, String id)  throws Exception{
 		String url = new String("http://hantalk.hansol.net/ajax/getAccountInfo.action");
 		Properties param = new Properties();
 		param.put("user_id", id);
+		System.out.println("in getaccount");
 		String json = request(session, url, param);
 		//System.out.println("AccountInfo :" +json);
 		return json;
 	}
 	
 	public String getTimeline(String session, String offset, String length) throws Exception{
+		return getTimeline(session, offset, length, null);
+	}
+	
+	public String getTimeline(String session, String offset, String length,	String group) throws Exception {
 		String url = new String("http://hantalk.hansol.net/ajax/getTimeline.action");
+		
 		Properties param = new Properties();
 		param.put("offset",	offset);
 		param.put("length", length);
-		String json = request(session, url, param);
-		return json;
+		
+		if ( group != null )
+			param.put("ug_id", group);
+		
+		return request(session, url, param);
 	}
 	
-	public String request(String session, String urlstr, Properties param) throws Exception{
-		String json = request(session, urlstr, param, false);
-		return json;
-	}
-	public String getExtend(String session, String offset) throws Exception{
-		return "";
+	public String request(String session, String urlstr, Properties param) throws Exception{		
+		return request(session, urlstr, param, false);
 	}
 	
-
 	public String request(String session, String urlstr, Properties param, boolean post) throws Exception{
 		String paramStr = "";
+		System.out.println("in request");
 		if(param != null){
 			for(Enumeration<Object> e = param.keys(); e.hasMoreElements(); ){
 				String key = (String)e.nextElement();
@@ -115,6 +123,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 				paramStr += key+"="+URLEncoder.encode(value, "UTF-8")+"&";
 			}
 		}
+		
 		URL url = post ? new URL(urlstr) : new URL(urlstr +"?"+paramStr);
 
 		HttpURLConnection http = (HttpURLConnection) url.openConnection();
@@ -138,17 +147,93 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		}
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(http.getInputStream()));
-		String line = "";
 		String result = "";
-		
+		String line = "";
 		while ((line = in.readLine()) != null) {
 			System.out.println(line);
 			result +=line;
 		}
-		String json = result;
-		return json;
-		
-}
+		System.out.println(result.substring(10, result.length()-1));
+		return result.substring(10, result.length()-1);	
+	}
 
+	@Override
+	public String getExtend(String session, String offset) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getReplyAll(String session, String postId) throws Exception {
+		// TODO Auto-generated method stub
+		String url = new String("http://hantalk.hansol.net/ajax/getReplyAll.action");
+		
+		Properties param = new Properties();
+		param.put("post_id", postId);
+		
+		return request(session, url, param);
+	}
 	
+	public String post(String session, String group, String text, String parent, String via, boolean reply) throws Exception{
+		String url = new String("http://hantalk.hansol.net/ajax/post.action");
+		Properties param = new Properties();
+		param.put("ug_id", group);
+		param.put("parent_post_id", parent == null ? "-1" :parent);
+		param.put("via", via == null ? "Xwing Demo" : via);
+		param.put("profile", "false");
+		param.put("post_text", text);
+
+		URL u = new URL(url);
+		HttpURLConnection http = (HttpURLConnection) u.openConnection();
+		http.setUseCaches(false);
+		http.setRequestProperty("Cookie", session);
+		http.setDoInput(true);
+		
+		http.setRequestMethod("POST");
+		http.setDoOutput(true);
+		String boundary = Long.toHexString(System.currentTimeMillis());
+		http.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);		
+		String charset = "UTF-8";
+		PrintWriter writer = null;
+		
+		try {
+		    OutputStream output = http.getOutputStream();
+		    writer = new PrintWriter(new OutputStreamWriter(output, charset), true); // true = autoFlush, important!
+		    
+			for(Enumeration<Object> e = param.keys(); e.hasMoreElements(); ){
+				String key = (String)e.nextElement();
+				String value = param.getProperty(key);
+			    writer.println("--" + boundary);
+			    writer.println("Content-Disposition: form-data; name=\""+key+"\"");
+			    writer.println();
+			    writer.println(value);
+			}
+
+			writer.println("--" + boundary);
+		    writer.println("Content-Disposition: form-data; name=\"upload_file\"; filename=\"\"");
+		    writer.println("Content-Type: application/octet-stream");
+		    writer.println();
+		    writer.println(); // Important! Indicates end of binary boundary.
+
+		    writer.println("--" + boundary+"--");
+		    writer.println();
+		} finally {
+		    if (writer != null) writer.close();
+		}
+		
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(http.getInputStream()));
+		String line = "";
+		String result = "";
+		
+		while ((line = in.readLine()) != null) {
+			result +=line;
+		}
+		
+		System.out.println(result.substring(33, result.length()-1));
+		http.disconnect();
+//		return json;
+		return result.substring(33, result.length()-1);	
+	}
+
 }

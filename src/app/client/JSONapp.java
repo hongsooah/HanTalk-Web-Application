@@ -6,8 +6,12 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
@@ -17,8 +21,8 @@ import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.core.client.JsArray;
-import com.google.gwt.core.client.JsonUtils;
 import java.util.Properties;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
@@ -34,97 +38,227 @@ public class JSONapp implements EntryPoint {
 	private Label textArea;
 	private TextBox idField;
 	private PasswordTextBox pwdField;
-	private VerticalPanel vpanel;
-	private Button sendButton;
+	private VerticalPanel loginPanel;
+	private Button loginButton;
 	private Button infoButton;
-	private Button timeButton;
+	private Button homeButton;
 	private HorizontalPanel hpanel;
 	private String session="";
 	private Image img;
 	private Image img2;
 	private FlexTable table;
 	private FlexTable replyTable;
-	private VerticalPanel rowPanel;
+	private HorizontalPanel rowPanel;
 	private HorizontalPanel contentPanel;
-	private Label content_infoLabel;
-	private Label contentLabel;
-	private HorizontalPanel replyPanel;
+	private Label nameLabel;
+	private Label textLabel;
 	private Label replyLabel;
-	private Button extendButton;
+	private Button expandButton;
 	public static int extend=0;
 	public static int length=10;
 	private Label loginDisplay;
+	private VerticalPanel middlePanel;
+	private VerticalPanel buttonPanel;
+	private FlowPanel textPanel;
+	private InlineLabel showAllReply;
+	private Button groupButton;
+	private String currentGroup;
+	private FlowPanel postPanel;
+	private TextBox postTextBox;
+	private Button postButton;
+	private HorizontalPanel replyPanel;
+	private FlexTable moreReplyTable;
+	private FlexTable defaultReplyTable;
+	private FlowPanel replyPostPanel;
+	private String postId;
 	
 	public void onModuleLoad() {
 		
+		/*Initialize Variables*/
 		table = new FlexTable();
-		vpanel = new VerticalPanel();
+		loginPanel = new VerticalPanel();
 		idField = new TextBox();
 		pwdField = new PasswordTextBox();
 		textArea = new Label();
-		sendButton = new Button("Login");
+		loginButton = new Button("Login");
 		infoButton = new Button("Info");
-		timeButton = new Button("TimeLine");
+		homeButton = new Button("Home");
+		groupButton = new Button("Group");
 		hpanel = new HorizontalPanel();
-		extendButton = new Button("Extend");
+		expandButton = new Button("Expand");
 		loginDisplay = new Label("Enter your account");
-		//img = new Image();
+		buttonPanel = new VerticalPanel();
+		middlePanel = new VerticalPanel();
+		postPanel = new FlowPanel();
 		
-		table.setWidth("800");
+		/*Add To Panel*/
+		//hpanel.add(loginButton);
+		loginPanel.add(loginDisplay);
+		loginPanel.add(idField);
+		loginPanel.add(pwdField);
+		loginPanel.add(loginButton);
+		//loginPanel.add(hpanel);
+		//loginPanel.add(textArea);
+		hpanel.add(infoButton);
+		hpanel.add(homeButton);
+		hpanel.add(groupButton);
+		buttonPanel.add(hpanel);
+		middlePanel.add(textArea);
+		middlePanel.add(postPanel);
+		middlePanel.add(table);
+		
+		/*Set Properties*/
+		table.setWidth("700");
 		textArea.setWidth("500");
 		textArea.setHeight("400");
-		textArea.setVisible(false);
+		textArea.setText("Well Come!!");
 		idField.setText("karroo");
 		pwdField.setText("111111");
-		extendButton.setVisible(false);
-		extendButton.setWidth("800");
-		loginDisplay.setVisible(true);
-		
-		hpanel.add(sendButton);
-		hpanel.add(infoButton);
-		hpanel.add(timeButton);
-		vpanel.add(idField);
-		vpanel.add(pwdField);
-		vpanel.add(hpanel);
-		vpanel.add(loginDisplay);
-		vpanel.add(textArea);
+		expandButton.setWidth("700");
+		loginPanel.setVisible(true);
+		buttonPanel.setVisible(false);
+		textArea.setVisible(false);
+		table.setVisible(false);
+		expandButton.setVisible(false);
 
+		//
+		postTextBox = new TextBox();
+		postTextBox.setSize("500", "25");
+		postTextBox.setText("나누고 싶은 hantalk?");
+		postButton = new Button("Post");
 		
-		RootPanel.get("login").add(vpanel);
-		RootPanel.get("extend").add(extendButton);
+		postPanel.add(postTextBox);
+		postPanel.add(postButton);
+		postButton.setVisible(false);
 		
-		String url = JSON_URL;
-		url = URL.encode(url);
-		/*
-		RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, url);
+		postPanel.setVisible(false);
+		//
+		
+		/*Set Style*/
+		loginPanel.setStyleName("panel");
+		buttonPanel.setStyleName("panel");
+		middlePanel.setStyleName("panel");
+		
+		/*Add To RootPanel*/
+		RootPanel.get("login").add(loginPanel);
+		RootPanel.get("button").add(buttonPanel);
+		RootPanel.get("content").add(middlePanel);
+		RootPanel.get("expand").add(expandButton);
+		
+			
+	    /*Button Event*/
+	    loginButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				String id = idField.getValue().toString();
+				String pwd = pwdField.getValue().toString();
+				//textArea.setVisible(true); //label
+				
+				try {
+					greetingService.getSession(id, pwd, new AsyncCallback<String>() {
+						public void onFailure(Throwable caught) {
+							// Show the RPC error message to the user
+							//textArea.setText(caught.toString());
+							loginDisplay.setText(caught.toString());
+						}
+						@Override
+						public void onSuccess(String result) {
+							// TODO Auto-generated method stub
+							session = result;
+							//Login OK!!//
+							
+							loginPanel.setVisible(false);
+							buttonPanel.setVisible(true);
+							textArea.setVisible(true);
+							table.setVisible(false);
+							expandButton.setVisible(false);
+						}
+					});
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+	    
+	    infoButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				String id = idField.getValue().toString();
+				System.out.println("click ok");
+				try {
+					greetingService.getAccountInfo(session, id, new AsyncCallback<String>(){
 
-	    try {
-	      Request request = builder.sendRequest(null, new RequestCallback() {
-	        public void onError(Request request, Throwable exception) {
-	          System.out.println(exception.toString());
-	        }
+						public void onFailure(Throwable caught) {
+							// Show the RPC error message to the user
+							System.out.println(caught);
+							textArea.setText(caught.toString());
+						}
+						public void onSuccess(String result) {
+							process_UserInfo(jsonUserInfoArray(result));
+						}
+					});
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
+	    
+	    groupButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				setWaitPost();
+				try {
+					greetingService.getTimeline(session, "0", "20", "testing", new AsyncCallback<String>(){
 
-	        public void onResponseReceived(Request request, Response response) {
-	          if (200 == response.getStatusCode()) {
-	        	  //String a = response.getText().replace("for (;;);", "");
-	        	  String a = response.getText();
-	        	  //a.trim();
-	        	  //a = "["+a+"]";
-	              goLoopPerData(asArrayOfStockData(a));
-	            
-	          } else {
-	            System.out.println("Couldn't Retrieve JSON (" + response.getStatusText()
-	                + ")");
-	          }
-	          
-	        }
-	      });
-	    } catch (RequestException e) {
-	      System.out.println("Couldn't retrieve JSON: " + e.toString());
-	    }
-	    */
-	    /////////////////////event//////////////////////////////////////////
-		extendButton.addClickHandler(new ClickHandler() {
+						public void onFailure(Throwable caught) {
+							// Show the RPC error message to the user
+							textArea.setText(caught.toString());
+							System.out.println(caught);
+						}
+						public void onSuccess(String result) {
+							currentGroup = "testing";
+							process_Timeline(jsonTimelineArray(result));
+							
+						}
+					});
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
+				
+	    homeButton.addClickHandler(new ClickHandler() {
+	    	
+			public void onClick(ClickEvent event) {
+				setWaitPost();
+				System.out.println("click ok");
+				try {
+					greetingService.getTimeline(session, "0", "20", new AsyncCallback<String>(){
+
+						public void onFailure(Throwable caught) {
+							// Show the RPC error message to the user
+							textArea.setText(caught.toString());
+							System.out.println(caught);
+						}
+						public void onSuccess(String result) {
+							System.out.println("click ok");
+							process_Timeline(jsonTimelineArray(result));
+						}
+					});
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
+	    
+	    expandButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				length += 10;
 				String len = length + "";
@@ -137,8 +271,7 @@ public class JSONapp implements EntryPoint {
 						}
 						public void onSuccess(String result) {
 							// TODO Auto-generated method stub
-							String json = "[" + result + "]";
-							goLoopPerData_time(asArrayOfStockData_time(json));
+							process_Timeline(jsonTimelineArray(result));
 						}
 					});
 				} catch (Exception e) {
@@ -148,182 +281,307 @@ public class JSONapp implements EntryPoint {
 				
 			}
 		});
-	    sendButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				String id = idField.getValue().toString();
-				String pwd = pwdField.getValue().toString();
-				textArea.setVisible(true); //label
-				
-				greetingService.getJson(id, pwd, new AsyncCallback<String>() {
-					public void onFailure(Throwable caught) {
-						// Show the RPC error message to the user
-						//textArea.setText(caught.toString());
-						loginDisplay.setText(caught.toString());
-					}
-					@Override
-					public void onSuccess(String result) {
-						// TODO Auto-generated method stub
-						sendButton.setEnabled(false);
-						idField.setEnabled(false);
-						pwdField.setEnabled(false);
-						session = result;
-						loginDisplay.setText("Login OK!");
-					}
-				});
-			}
-		});
-	    infoButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				String id = idField.getValue().toString();
-				
-				try {
-					greetingService.getAccountInfo(session, id, new AsyncCallback<String>(){
-
-						public void onFailure(Throwable caught) {
-							// Show the RPC error message to the user
-							textArea.setText(caught.toString());
-						}
-						public void onSuccess(String result) {
-							// TODO Auto-generated method stub
-							String json = "[" + result + "]";
-							goLoopPerData_info(asArrayOfStockData(json));
-						}
-					});
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}
-		});
-	    timeButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				
-				String id = idField.getValue().toString();
-				String ex = extend + ""; //0
-				String len = length + ""; //20
-				try {
-					greetingService.getTimeline(session, ex, len, new AsyncCallback<String>(){
-
-						public void onFailure(Throwable caught) {
-							// Show the RPC error message to the user
-							textArea.setText(caught.toString());
-						}
-						public void onSuccess(String result) {
-							// TODO Auto-generated method stub
-							String json = "[" + result + "]";
-							goLoopPerData_time(asArrayOfStockData_time(json));
-						}
-					});
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}
-		});
-	   ////////////////////////////////////////////////////////////////////////////////////////
 	    
-	}
-	
-	private void goLoopPerData_info(JsArray<Data> data){
-		for(int i=0; i<data.length(); i++){
-			processData_info(data.get(i));
-		}
-	}
-	
-	
-	private void goLoopPerData_time(JsArray<Time> time){
-		for(int i=0; i<time.length(); i++){
-			processData_time(time.get(i));
-		}
-	}
-	private void processData_info(Data data){
+	    postTextBox.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				// TODO Auto-generated method stub
+				setWritePost();
+				
+			}
+		});
 		
+		postButton.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				// TODO Auto-generated method stub
+				try {
+					greetingService.post(session, currentGroup, postTextBox.getValue().toString(), null, "WEB", false, new AsyncCallback<String>() {
+						
+						public void onSuccess(String result) {
+							// TODO Auto-generated method stub
+							try {
+								greetingService.getTimeline(session, "0", "20", currentGroup, new AsyncCallback<String>(){
+
+									public void onFailure(Throwable caught) {
+										// Show the RPC error message to the user
+										textArea.setText(caught.toString());
+										System.out.println(caught);
+									}
+									public void onSuccess(String result) {
+										currentGroup = "testing";
+										process_Timeline(jsonTimelineArray(result));
+										setWaitPost();
+									}
+								});
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+						@Override
+						public void onFailure(Throwable caught) {
+							// TODO Auto-generated method stub
+							
+						}
+					});
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
+		});
+		
+	}// end ModuleLoad Function
+	
+	/*User-Infomation*/
+		
+	private void process_UserInfo(JsArray<UserInfo> array){
+		System.out.println(array);
+		UserInfo user = array.get(0);
+		System.out.println(user);
 		textArea.setText(
-				"Id: " + data.getProfileVoList_userId()+"\n"
-				+ "Department: "+data.getDeptName()+"\n"
-				+ "Email: "+data.getEmail()+"\n"
-				+ "Mobile: "+data.getMobile()+"\n"
-				+ "Month: "+data.getDtLastLogin_month()+"\n"
-				+ "Day: "+data.getDtLastLogin_day()+"\n"
-				+ "Date: "+data.getDtLastLogin_date()+"\n"
+				"Id: " + user.getProfileVoList_userId()+"\n"
+				+ "Department: "+user.getDeptName()+"\n"
+				+ "Email: "+user.getEmail()+"\n"
+				+ "Mobile: "+user.getMobile()+"\n"
+				+ "Month: "+user.getDtLastLogin_month()+"\n"
+				+ "Day: "+user.getDtLastLogin_day()+"\n"
+				+ "Date: "+user.getDtLastLogin_date()+"\n"
 				);
 		
+		loginPanel.setVisible(false);
+		buttonPanel.setVisible(true);
 		textArea.setVisible(true);
 		table.setVisible(false);
-		extendButton.setVisible(false);
-		loginDisplay.setVisible(false);
+		expandButton.setVisible(false);
+		postPanel.setVisible(false);
 	}
-
-	private void processData_time(Time time){
-		int child=0;
+	
+	/*Timeline*/
+		
+	@SuppressWarnings("deprecation")
+	private void process_Timeline(JsArray<Timeline> array){
+		//
+		postPanel.setVisible(true);
+				
 		table.clear();
-		for(int i=0; i<length*2; i+=2){
+		
+		for(int i=0; i<array.length(); i++){
+			Timeline result = array.get(i);
 			
-			rowPanel = new VerticalPanel();
+			/*Initialize Variables*/
+			rowPanel = new HorizontalPanel();
 			contentPanel = new HorizontalPanel();
-			content_infoLabel = new Label();
-			contentLabel = new Label();
+			textPanel = new FlowPanel();
+			replyPanel = new HorizontalPanel();
+			
+			nameLabel = new InlineLabel(result.getAccount() + " ");
+			textLabel = new InlineLabel(result.getPostText());
+			
 			replyTable = new FlexTable();
-			//replyPanel = new HorizontalPanel();
-			//replyLabel = new Label();
-			img = new Image();
+			moreReplyTable = new FlexTable();
+			defaultReplyTable = new FlexTable();
+			replyPostPanel = new FlowPanel();
+			
+			/*Set Properties*/
+			replyTable.setWidget(0, 0, moreReplyTable);
+			replyTable.setWidget(1, 0, defaultReplyTable);
+			replyTable.setWidget(2, 0, replyPostPanel);
+			replyTable.setCellSpacing(1);
+			
+			img = new Image(checkNoImg(result.getImgPath()));
 			img.setSize("50", "50");
-			replyTable.setCellSpacing(20);
+			postId = Integer.toString(result.getPostId());
 			
-			img.setUrl("http://hantalk.hansol.net/data-imgs/avatar/default/"+time.getProfileVoList_imgPath(i/2));
-			content_infoLabel.setText("Id: "+time.getId(i/2)+"\n"
-									+"Department: "+time.getDeptName(i/2)+"\n"
-									+"Email: "+time.getEmail(i/2)+"\n");
-			contentLabel.setText(time.getPostVo_postText(i/2));
+			/* Check reply Count and make button*/
+			int replyCount = result.getReplyCount();
+			if ( replyCount > 3 ) {
+				HorizontalPanel replyAllPanel = new HorizontalPanel();
+				showAllReply = new InlineLabel((replyCount - 3) + "개의 댓글 모두 보기");
+				showAllReply.addClickListener(new ClickListener() {
+					
+					@Override
+					public void onClick(Widget sender) {
+						// TODO Auto-generated method stub
+						greetingService.getReplyAll(session, postId, new AsyncCallback<String>() {
+
+							@Override
+							public void onFailure(Throwable caught) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public void onSuccess(String result) {
+								// TODO Auto-generated method stub
+								showAllReply.setVisible(false);
+								
+								JsArray<Timeline> reply = jsonTimelineArray(result);
+								
+								for ( int i = 0 ; i < reply.length() ; i++ ){
+									final Timeline tempReply = reply.get(i);
+									moreReplyTable.setWidget(i+1, 0, getReplyRowPanel(tempReply, 0, false));
+								}
+								
+							}
+							
+						});
+						
+					}
+				});
+				
+				replyAllPanel.add(showAllReply);
+				moreReplyTable.setWidget(0, 0, replyAllPanel);
+				
+			} 	
 			
-			for(child=0; child<5; child++){
-				
-				replyPanel = new HorizontalPanel();
-				img2 = new Image();
-				img2.setSize("40", "40");
-				replyLabel = new Label();
-				
-				if(time.getReplyImage(i/2, child).equals("x")){
-					break;
+			/*Reply Loop*/
+//			for(child=0; child<5; child++){
+			
+			if ( result.getChildren(0).equals("not null") ) {
+				//String postId = result.getPostId();
+				int j=0;
+				for(j=0; result.getChildren(j).equals("not null") ; j++){
+					/*Initialize Variables*/
+					
+					defaultReplyTable.setWidget(j, 0, getReplyRowPanel(result, j, true));	//Update ReplyTable
+					
 				}
-				else{
-				img2.setUrl("http://hantalk.hansol.net/data-imgs/avatar/default/"+time.getReplyImage(i/2, child));
-				replyLabel.setText(time.getReply(i/2,child));
 				
-				replyPanel.add(img2);
-				replyPanel.add(replyLabel);
-				replyTable.setWidget(child, 0, replyPanel);
-				}
+				replyPostPanel.add(addReplyPostPanel(result.getPostId(),j));
+				//addReplyPost(replyPanel);
 			}
+			
+			
+			/*Add To Panel*/
 			contentPanel.add(img);
-			contentPanel.add(content_infoLabel);
-			replyPanel.add(img2);
-			replyPanel.add(replyLabel);
+			textPanel.add(nameLabel);
+			textPanel.add(textLabel);
 			rowPanel.add(contentPanel);
-			rowPanel.add(contentLabel);
-			//rowPanel.add(replyPanel);
-			
-			//table.setWidget(i, 0, content_infoLabel);
-			table.setWidget(i, 0, rowPanel);
-			table.setWidget(i+1, 0, replyTable);
-			RootPanel.get("panel").add(table);
-			
+			rowPanel.add(textPanel);
+			replyPanel.add(new Label("             "));
+			replyPanel.add(replyTable);
+			/*Update Table*/
+			table.setWidget(2*i, 0, rowPanel);
+			table.setWidget(2*i+1, 0, replyPanel);
 		}
 		
-		extendButton.setVisible(true);
+		loginPanel.setVisible(false);
+		buttonPanel.setVisible(true);
 		textArea.setVisible(false);
 		table.setVisible(true);
-		loginDisplay.setVisible(false);
+		expandButton.setVisible(true);
 	}
 	
-	private final native JsArray<Data> asArrayOfStockData(String json) /*-{
+	private HorizontalPanel getReplyRowPanel(Timeline result, int j, boolean reply){
+		HorizontalPanel replyRowPanel = new HorizontalPanel();
+		HorizontalPanel replyContentPanel = new HorizontalPanel();
+		FlowPanel replyTextPanel = new FlowPanel();
+		
+		if ( reply ) {
+					
+			img2 = new Image(checkNoImg(result.getChildrenImgPath(j)));
+			img2.setSize("40", "40");
+			InlineLabel replyNameLabel = new InlineLabel(result.getChildrenAccount(j) + " ");
+			InlineLabel replyTextLabel = new InlineLabel(result.getChildrenPostText(j));
+			
+			replyContentPanel.add(img2);
+			replyTextPanel.add(replyNameLabel);
+			replyTextPanel.add(replyTextLabel);
+			replyRowPanel.add(replyContentPanel);
+			replyRowPanel.add(replyTextPanel);
+		} else {
+			img2 = new Image(checkNoImg(result.getImgPath()));
+			img2.setSize("40", "40");
+			InlineLabel replyNameLabel = new InlineLabel(result.getAccount() + " ");
+			InlineLabel replyTextLabel = new InlineLabel(result.getPostText());
+			
+			replyContentPanel.add(img2);
+			replyTextPanel.add(replyNameLabel);
+			replyTextPanel.add(replyTextLabel);
+			replyRowPanel.add(replyContentPanel);
+			replyRowPanel.add(replyTextPanel);
+		}
+			return replyRowPanel;
+	}
+	
+	private FlowPanel addReplyPostPanel(final int postId, final int i){
+		FlowPanel replyPostPanel = new FlowPanel();
+		final TextBox replyTextBox = new TextBox();
+		final Button replyButton = new Button("댓글달기");
+		replyTextBox.setText("댓글을 기다려요");
+		replyTextBox.setSize("500", "20");
+		replyTextBox.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				replyTextBox.setSize("400", "40");
+				replyTextBox.setText("");
+				replyButton.setVisible(true);
+				
+			}
+		});
+		
+		replyPostPanel.add(replyTextBox);
+		replyPostPanel.add(replyButton);
+		replyButton.setVisible(false);
+		replyButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				try {
+					greetingService.post(session, currentGroup, replyTextBox.getValue().toString(), Integer.toString(postId), "WEB", false, new AsyncCallback<String>() {
+						public void onSuccess(String result) {
+							// TODO Auto-generated method stub
+							replyTextBox.setText("댓글을 기다려요");
+							replyTextBox.setSize("500", "20");
+							replyButton.setVisible(false);
+							Timeline data = jsonTimelineArray(result).get(0);
+							
+							defaultReplyTable.setWidget(3, 0, getReplyRowPanel(data, 0, false));
+						}
+						
+						@Override
+						public void onFailure(Throwable caught) {
+							// TODO Auto-generated method stub
+							
+						}
+					});
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
+		});
+		
+		return replyPostPanel;
+	}
+	
+	
+	private void setWaitPost(){
+		postTextBox.setSize("500", "20");
+		postTextBox.setText("나누고 싶은 hantalk?");
+		postButton.setVisible(false);
+	}
+	
+	private void setWritePost(){
+		postTextBox.setSize("400", "40");
+		postTextBox.setText("");
+		postButton.setVisible(true);
+	
+	}
+	
+	private String checkNoImg(String Url){
+		if (Url.equals("http://hantalk.hansol.net/data-imgs/avatar/default/") | Url.equals("http://hantalk.hansol.net/data-imgs/avatar/user/"))
+			return "http://hantalk.hansol.net/default-imgs/avatar-default.png";
+		else
+			return Url;
+	}
+	
+	private final native JsArray<UserInfo> jsonUserInfoArray(String json) /*-{
 	  return eval(json);
 	}-*/;
-	private final native JsArray<Time> asArrayOfStockData_time(String json) /*-{
+	private final native JsArray<Timeline> jsonTimelineArray(String json) /*-{
 	  return eval(json);
-	}-*/;	
-	
-	
+	}-*/;
 }
