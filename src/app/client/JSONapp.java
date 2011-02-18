@@ -2,35 +2,25 @@ package app.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.http.client.URL;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.core.client.JsArray;
-import java.util.Properties;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.ui.Image;
 
+@SuppressWarnings("deprecation")
 public class JSONapp implements EntryPoint {
 	
 	private static final String JSON_URL = GWT.getModuleBaseURL() + "tempServlet";
@@ -71,6 +61,7 @@ public class JSONapp implements EntryPoint {
 	private FlexTable defaultReplyTable;
 	private FlowPanel replyPostPanel;
 	private String postId;
+	private VerticalPanel replyMorePanel;
 	
 	public void onModuleLoad() {
 		
@@ -92,13 +83,10 @@ public class JSONapp implements EntryPoint {
 		postPanel = new FlowPanel();
 		
 		/*Add To Panel*/
-		//hpanel.add(loginButton);
 		loginPanel.add(loginDisplay);
 		loginPanel.add(idField);
 		loginPanel.add(pwdField);
 		loginPanel.add(loginButton);
-		//loginPanel.add(hpanel);
-		//loginPanel.add(textArea);
 		hpanel.add(infoButton);
 		hpanel.add(homeButton);
 		hpanel.add(groupButton);
@@ -108,13 +96,13 @@ public class JSONapp implements EntryPoint {
 		middlePanel.add(table);
 		
 		/*Set Properties*/
-		table.setWidth("700");
+		table.setWidth("600");
 		textArea.setWidth("500");
 		textArea.setHeight("400");
 		textArea.setText("Well Come!!");
 		idField.setText("karroo");
 		pwdField.setText("111111");
-		expandButton.setWidth("700");
+		expandButton.setWidth("600");
 		loginPanel.setVisible(true);
 		buttonPanel.setVisible(false);
 		textArea.setVisible(false);
@@ -123,7 +111,7 @@ public class JSONapp implements EntryPoint {
 
 		//
 		postTextBox = new TextBox();
-		postTextBox.setSize("500", "25");
+		postTextBox.setSize("600", "25");
 		postTextBox.setText("나누고 싶은 hantalk?");
 		postButton = new Button("Post");
 		
@@ -362,15 +350,14 @@ public class JSONapp implements EntryPoint {
 	
 	/*Timeline*/
 		
-	@SuppressWarnings("deprecation")
 	private void process_Timeline(JsArray<Timeline> array){
-		//
+		
 		postPanel.setVisible(true);
 				
 		table.clear();
 		
 		for(int i=0; i<array.length(); i++){
-			Timeline result = array.get(i);
+			final Timeline result = array.get(i);
 			
 			/*Initialize Variables*/
 			rowPanel = new HorizontalPanel();
@@ -382,78 +369,43 @@ public class JSONapp implements EntryPoint {
 			textLabel = new InlineLabel(result.getPostText());
 			
 			replyTable = new FlexTable();
-			moreReplyTable = new FlexTable();
+			replyMorePanel = new VerticalPanel();
+			
 			defaultReplyTable = new FlexTable();
 			replyPostPanel = new FlowPanel();
 			
 			/*Set Properties*/
-			replyTable.setWidget(0, 0, moreReplyTable);
+			
 			replyTable.setWidget(1, 0, defaultReplyTable);
 			replyTable.setWidget(2, 0, replyPostPanel);
 			replyTable.setCellSpacing(1);
 			
 			img = new Image(checkNoImg(result.getImgPath()));
 			img.setSize("50", "50");
-			postId = Integer.toString(result.getPostId());
 			
-			/* Check reply Count and make button*/
+			
+			/* Set Reply Table */
 			int replyCount = result.getReplyCount();
 			if ( replyCount > 3 ) {
+				moreReplyTable = new FlexTable();
 				HorizontalPanel replyAllPanel = new HorizontalPanel();
+				
 				showAllReply = new InlineLabel((replyCount - 3) + "개의 댓글 모두 보기");
-				showAllReply.addClickListener(new ClickListener() {
-					
-					@Override
-					public void onClick(Widget sender) {
-						// TODO Auto-generated method stub
-						greetingService.getReplyAll(session, postId, new AsyncCallback<String>() {
-
-							@Override
-							public void onFailure(Throwable caught) {
-								// TODO Auto-generated method stub
-								
-							}
-
-							@Override
-							public void onSuccess(String result) {
-								// TODO Auto-generated method stub
-								showAllReply.setVisible(false);
-								
-								JsArray<Timeline> reply = jsonTimelineArray(result);
-								
-								for ( int i = 0 ; i < reply.length() ; i++ ){
-									final Timeline tempReply = reply.get(i);
-									moreReplyTable.setWidget(i+1, 0, getReplyRowPanel(tempReply, 0, false));
-								}
-								
-							}
-							
-						});
-						
-					}
-				});
+				addClickEvent(showAllReply, result, moreReplyTable);
 				
 				replyAllPanel.add(showAllReply);
 				moreReplyTable.setWidget(0, 0, replyAllPanel);
-				
+				replyTable.setWidget(0, 0, moreReplyTable);
 			} 	
 			
-			/*Reply Loop*/
-//			for(child=0; child<5; child++){
-			
 			if ( result.getChildren(0).equals("not null") ) {
-				//String postId = result.getPostId();
-				int j=0;
-				for(j=0; result.getChildren(j).equals("not null") ; j++){
+				for(int j=0; result.getChildren(j).equals("not null") ; j++){
 					/*Initialize Variables*/
-					
 					defaultReplyTable.setWidget(j, 0, getReplyRowPanel(result, j, true));	//Update ReplyTable
-					
 				}
-				
-				replyPostPanel.add(addReplyPostPanel(result.getPostId(),j));
-				//addReplyPost(replyPanel);
 			}
+			
+			replyPostPanel.add(addReplyPostPanel(result.getPostId(),defaultReplyTable.getRowCount(), defaultReplyTable));
 			
 			
 			/*Add To Panel*/
@@ -464,9 +416,11 @@ public class JSONapp implements EntryPoint {
 			rowPanel.add(textPanel);
 			replyPanel.add(new Label("             "));
 			replyPanel.add(replyTable);
+			
 			/*Update Table*/
 			table.setWidget(2*i, 0, rowPanel);
 			table.setWidget(2*i+1, 0, replyPanel);
+			
 		}
 		
 		loginPanel.setVisible(false);
@@ -474,6 +428,45 @@ public class JSONapp implements EntryPoint {
 		textArea.setVisible(false);
 		table.setVisible(true);
 		expandButton.setVisible(true);
+	}
+	
+	private void addClickEvent(InlineLabel label, Timeline data, final FlexTable table){
+		final InlineLabel showAllReply = label;
+		final Timeline result = data;
+		showAllReply.addClickListener(new ClickListener() {
+			
+			@Override
+			public void onClick(Widget sender) { 
+				postId = Integer.toString(result.getPostId());
+				// TODO Auto-generated method stub	
+				System.out.println(">> " + postId + " <<");
+				greetingService.getReplyAll(session, postId, result.getReplyCount() -3, new AsyncCallback<String>() {
+
+					@Override
+					public void onFailure(Throwable caught) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void onSuccess(String result) {
+						// TODO Auto-generated method stub
+						showAllReply.setVisible(false);
+						
+						JsArray<Timeline> reply = jsonTimelineArray(result);
+						System.out.println(reply.length());
+						for ( int i = 0 ; i < reply.length() ; i++ ){
+							final Timeline moreReply = reply.get(i);
+							setMoreReplyTable(i+1, 0, getReplyRowPanel(moreReply, 0, false), table);
+						}
+					}
+				});
+			}
+		});
+	}
+	
+	private void setMoreReplyTable(int row, int column, Widget widget, final FlexTable table){
+		table.setWidget(row, column, widget);
 	}
 	
 	private HorizontalPanel getReplyRowPanel(Timeline result, int j, boolean reply){
@@ -508,7 +501,7 @@ public class JSONapp implements EntryPoint {
 			return replyRowPanel;
 	}
 	
-	private FlowPanel addReplyPostPanel(final int postId, final int i){
+	private FlowPanel addReplyPostPanel(final int postId, final int i, final FlexTable table){
 		FlowPanel replyPostPanel = new FlowPanel();
 		final TextBox replyTextBox = new TextBox();
 		final Button replyButton = new Button("댓글달기");
@@ -534,12 +527,13 @@ public class JSONapp implements EntryPoint {
 					greetingService.post(session, currentGroup, replyTextBox.getValue().toString(), Integer.toString(postId), "WEB", false, new AsyncCallback<String>() {
 						public void onSuccess(String result) {
 							// TODO Auto-generated method stub
+						
 							replyTextBox.setText("댓글을 기다려요");
 							replyTextBox.setSize("500", "20");
 							replyButton.setVisible(false);
 							Timeline data = jsonTimelineArray(result).get(0);
-							
-							defaultReplyTable.setWidget(3, 0, getReplyRowPanel(data, 0, false));
+							int count = table.getRowCount();
+							table.setWidget(count, 0, getReplyRowPanel(data, 0, false));
 						}
 						
 						@Override
@@ -559,7 +553,7 @@ public class JSONapp implements EntryPoint {
 	
 	
 	private void setWaitPost(){
-		postTextBox.setSize("500", "20");
+		postTextBox.setSize("550", "20");
 		postTextBox.setText("나누고 싶은 hantalk?");
 		postButton.setVisible(false);
 	}

@@ -13,7 +13,7 @@ public interface GreetingServiceAsync {
 	void getTimeline(String session, String offset, String length, String group, AsyncCallback<String> callback) throws Exception;
 	void getExtend(String session, String offset, AsyncCallback<String> callback) throws Exception;
 	void getSession(String id, String pwd, AsyncCallback<String> asyncCallback)throws Exception;
-	void getReplyAll(String session, String postId, AsyncCallback<String> callback);
+	void getReplyAll(String session, String postId, int maxReply, AsyncCallback<String> callback);
 	void post(String session, String group, String text, String parent,	String via, boolean reply, AsyncCallback<String> callback);
 
 }

@@ -15,6 +15,6 @@ public interface GreetingService extends RemoteService {
 	String getTimeline(String session, String offset, String length, String group) throws Exception;
 	String getExtend(String session, String offset) throws Exception;
 	String getSession(String id, String pwd) throws Exception;
-	String getReplyAll(String session, String postId) throws Exception;
+	String getReplyAll(String session, String postId, int maxReply) throws Exception;
 	String post(String session, String group, String text, String parent, String via ,boolean reply) throws Exception;
 }

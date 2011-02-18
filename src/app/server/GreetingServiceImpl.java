@@ -164,12 +164,13 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	}
 
 	@Override
-	public String getReplyAll(String session, String postId) throws Exception {
+	public String getReplyAll(String session, String postId, int maxReply) throws Exception {
 		// TODO Auto-generated method stub
 		String url = new String("http://hantalk.hansol.net/ajax/getReplyAll.action");
 		
 		Properties param = new Properties();
 		param.put("post_id", postId);
+		param.put("max", Integer.toString(maxReply));
 		
 		return request(session, url, param);
 	}
